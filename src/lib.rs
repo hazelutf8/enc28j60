@@ -21,7 +21,7 @@
 #![deny(missing_docs)]
 #![deny(rust_2018_compatibility)]
 #![deny(rust_2018_idioms)]
-#![deny(warnings)]
+//#![deny(warnings)]
 #![no_std]
 
 use core::{cmp, u16};
@@ -31,7 +31,7 @@ use byteorder::{ByteOrder, LE};
 use cast::usize;
 use embedded_hal::{
     blocking::{self, delay::DelayMs},
-    digital::{InputPin, OutputPin},
+    digital::v2::{InputPin, OutputPin},
     spi::{Mode, Phase, Polarity},
 };
 use owning_slice::IntoSliceTo;
@@ -475,7 +475,7 @@ where
     fn _read_control_register(&mut self, register: Register) -> Result<u8, E> {
         self.change_bank(register)?;
 
-        self.ncs.set_low();
+        self.ncs.set_low()?;
         let mut buffer = [Instruction::RCR.opcode() | register.addr(), 0];
         self.spi.transfer(&mut buffer)?;
         self.ncs.set_high();
@@ -683,7 +683,10 @@ where
 
     /// Checks if there's any interrupt pending to be processed by polling the INT pin
     pub fn interrupt_pending(&mut self) -> bool {
-        self.int.is_low()
+        match self.int.is_low() {
+			Ok(_) => true,
+			_ => false,
+		}
     }
 
     /// Stops listening for the specified event

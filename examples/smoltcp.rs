@@ -5,10 +5,10 @@
 //!
 //! You can test this program with the following:
 //!
-//! - `ping 192.168.1.2`. The device will respond to every request (response time should be ~10ms).
-//! - `curl 192.168.1.2`. The device will respond with a HTTP response with the current
+//! - `ping 192.168.5.2`. The device will respond to every request (response time should be ~10ms).
+//! - `curl 192.168.5.2`. The device will respond with a HTTP response with the current
 //! LED state in the body.
-//! - Visiting `https://192.168.1.2/`. Every refresh will toggle the LED and the page will
+//! - Visiting `https://192.168.5.2/`. Every refresh will toggle the LED and the page will
 //! reflect the current state.
 //!
 #![no_std]
@@ -113,7 +113,7 @@ fn main() -> ! {
     writeln!(serial, "eth initialized").unwrap();
 
     // Ethernet interface
-    let local_addr = Ipv4Address::new(192, 168, 1, 2);
+    let local_addr = Ipv4Address::new(192, 168, 5, 2);
     let ip_addr = IpCidr::new(IpAddress::from(local_addr), 24);
     let mut ip_addrs = [ip_addr];
     let mut neighbor_storage = [None; 16];
