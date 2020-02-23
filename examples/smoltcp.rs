@@ -25,7 +25,8 @@ use smoltcp::{
     time::Instant,
     wire::{EthernetAddress, IpAddress, IpCidr, Ipv4Address},
 };
-use stm32f1xx_hal::{delay::Delay, device, prelude::*, serial::Serial, spi::Spi};
+use embedded_hal::{digital::v2::OutputPin, digital::v2::StatefulOutputPin, digital::v2::ToggleableOutputPin};
+use stm32f1xx_hal::{delay::Delay, device, /*prelude::*,*/ serial::Serial, spi::Spi, afio::AfioExt, gpio::GpioExt, flash::FlashExt, rcc::RccExt};
 
 const SRC_MAC: [u8; 6] = [0x20, 0x18, 0x03, 0x01, 0x00, 0x00];
 
@@ -57,7 +58,7 @@ fn main() -> ! {
             dp.USART1,
             (tx, rx),
             &mut afio.mapr,
-            115_200.bps(),
+            115_200_i32.bps(),
             clocks,
             &mut rcc.apb2,
         );
@@ -159,8 +160,9 @@ fn main() -> ! {
                             socket,
                             "HTTP/1.1 200 OK\r\n\r\nHello!\nLED is currently {} and has been toggled {} times.\n",
                             match led.is_set_low() {
-                                true => "on",
-                                false => "off",
+                                Result::Ok(true) => "on",
+                                Result::Ok(false) => "off",
+                                _ => "Error",
                             },
                             count
                         )
