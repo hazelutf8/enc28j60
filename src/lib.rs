@@ -594,7 +594,8 @@ where
         self.change_bank(register)?;
 
         let _ = self.ncs.set_low();
-        self.spi.write(&[Instruction::BFC.opcode() | register.addr(), mask])?;
+        self.spi
+            .write(&[Instruction::BFC.opcode() | register.addr(), mask])?;
         let _ = self.ncs.set_high();
 
         Ok(())
@@ -683,9 +684,9 @@ where
     /// Checks if there's any interrupt pending to be processed by polling the INT pin
     pub fn interrupt_pending(&mut self) -> bool {
         match self.int.is_low() {
-			Ok(_) => true,
-			_ => false,
-		}
+            Ok(_) => true,
+            _ => false,
+        }
     }
 
     /// Stops listening for the specified event
