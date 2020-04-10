@@ -26,7 +26,7 @@ use smoltcp::{
     wire::{EthernetAddress, IpAddress, IpCidr, Ipv4Address},
 };
 use embedded_hal::{digital::v2::OutputPin, digital::v2::StatefulOutputPin, digital::v2::ToggleableOutputPin};
-use stm32f1xx_hal::{delay::Delay, device, /*prelude::*,*/ serial::Serial, spi::Spi, afio::AfioExt, gpio::GpioExt, flash::FlashExt, rcc::RccExt};
+use stm32f1xx_hal::{delay::Delay, device, serial::Serial, spi::Spi, afio::AfioExt, gpio::GpioExt, flash::FlashExt, rcc::RccExt, time::*};
 
 const SRC_MAC: [u8; 6] = [0x20, 0x18, 0x03, 0x01, 0x00, 0x00];
 
@@ -58,7 +58,7 @@ fn main() -> ! {
             dp.USART1,
             (tx, rx),
             &mut afio.mapr,
-            115_200_i32.bps(),
+            115_200_u32.bps(),
             clocks,
             &mut rcc.apb2,
         );
@@ -78,7 +78,7 @@ fn main() -> ! {
             (sck, miso, mosi),
             &mut afio.mapr,
             enc28j60::MODE,
-            1.mhz(),
+            1_u32.mhz(),
             clocks,
             &mut rcc.apb2,
         )
