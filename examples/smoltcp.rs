@@ -19,12 +19,17 @@ extern crate panic_semihosting;
 use core::fmt::Write;
 use cortex_m_rt::entry;
 use enc28j60::{smoltcp_phy::Phy, Enc28j60};
-use smoltcp::{
-    iface::{EthernetInterfaceBuilder, NeighborCache},
-    socket::{SocketSet, TcpSocket, TcpSocketBuffer},
-    time::Instant,
-    wire::{EthernetAddress, IpAddress, IpCidr, Ipv4Address},
-};
+use smoltcp::iface::EthernetInterfaceBuilder;
+use smoltcp::iface::NeighborCache;
+use smoltcp::socket::SocketSet;
+use smoltcp::socket::TcpSocket;
+use smoltcp::socket::TcpSocketBuffer;
+use smoltcp::time::Instant;
+use smoltcp::wire::EthernetAddress;
+use smoltcp::wire::IpAddress;
+use smoltcp::wire::IpCidr;
+use smoltcp::wire::Ipv4Address;
+
 use embedded_hal::{digital::v2::OutputPin, digital::v2::StatefulOutputPin, digital::v2::ToggleableOutputPin};
 use stm32f1xx_hal::{delay::Delay, device, serial::Serial, spi::Spi, afio::AfioExt, gpio::GpioExt, flash::FlashExt, rcc::RccExt, time::*};
 
