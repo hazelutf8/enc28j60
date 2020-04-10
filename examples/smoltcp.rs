@@ -26,7 +26,7 @@ use smoltcp::{
     wire::{EthernetAddress, IpAddress, IpCidr, Ipv4Address},
 };
 
-use embedded_hal::digital::v2::{OutputPin, StatefulOutputPin, ToggleableOutputPin};
+use embedded_hal::digital::v2::{OutputPin, StatefulOutputPin};
 use stm32f1xx_hal::{
     afio::AfioExt, delay::Delay, device, flash::FlashExt, gpio::GpioExt, rcc::RccExt,
     serial::Serial, spi::Spi, time::*,
@@ -52,7 +52,7 @@ fn main() -> ! {
     // LED
     let mut led = gpioc.pc13.into_push_pull_output(&mut gpioc.crh);
     // turn the LED off during initialization
-    led.set_high();
+    let _ = led.set_low();
 
     // Serial
     let mut serial = {
@@ -92,9 +92,9 @@ fn main() -> ! {
     // ENC28J60
     let enc28j60 = {
         let mut ncs = gpioa.pa4.into_push_pull_output(&mut gpioa.crl);
-        ncs.set_high();
+        let _ = ncs.set_high();
         let mut reset = gpioa.pa3.into_push_pull_output(&mut gpioa.crl);
-        reset.set_high();
+        let _ = reset.set_high();
         let mut delay = Delay::new(cp.SYST, clocks);
 
         Enc28j60::new(
@@ -143,9 +143,6 @@ fn main() -> ! {
     let server_handle = sockets.add(server_socket);
     writeln!(serial, "sockets initialized").unwrap();
 
-    // LED on after initialization
-    led.set_low();
-
     let mut count: u64 = 0;
     loop {
         match iface.poll(&mut sockets, Instant::from_millis(0)) {
@@ -157,7 +154,12 @@ fn main() -> ! {
                     }
 
                     if socket.can_send() {
-                        led.toggle();
+                        // Toggle LED, without using ToggleableOutputPin in case it isn't implemented.
+                        let _ = match led.is_set_high() {
+                            Result::Ok(true) => led.set_low(),
+                            _ => led.set_high(),
+                        };
+                        count += 1;
 
                         writeln!(serial, "tcp:80 send").unwrap();
                         write!(
@@ -174,8 +176,6 @@ fn main() -> ! {
 
                         writeln!(serial, "tcp:80 close").unwrap();
                         socket.close();
-
-                        count += 1;
                     }
                 }
             }

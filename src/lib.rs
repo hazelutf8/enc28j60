@@ -21,7 +21,7 @@
 #![deny(missing_docs)]
 #![deny(rust_2018_compatibility)]
 #![deny(rust_2018_idioms)]
-//#![deny(warnings)]
+#![deny(warnings)]
 #![no_std]
 
 use core::{cmp, u16};
@@ -330,8 +330,13 @@ where
 
             // status vector
             let status = RxStatus(LE::read_u32(&temp_buf[2..]));
-            let len = status.byte_count() as u16 - CRC_SZ;
+            let byte_count = status.byte_count() as u16;
 
+            if byte_count < CRC_SZ {
+                return Err(Error::CorruptRxBuffer);
+            }
+
+            let len = byte_count - CRC_SZ;
             if len > self.rxnd {
                 return Err(Error::CorruptRxBuffer);
             }

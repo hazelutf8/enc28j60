@@ -40,9 +40,8 @@ where
     type TxToken = TxToken<'a, SPI, NCS, INT, RESET>;
 
     fn receive(&'a mut self) -> Option<(Self::RxToken, Self::TxToken)> {
-        let packet = self.phy.next_packet().ok().unwrap();
-        match packet {
-            Some(packet) => {
+        match self.phy.next_packet().ok() {
+            Some(Some(packet)) => {
                 packet.read(&mut self.rx_buf[..]).ok().unwrap();
                 Some((
                     RxToken(&mut self.rx_buf[..]),
@@ -52,7 +51,7 @@ where
                     },
                 ))
             }
-            None => None,
+            _ => None,
         }
     }
 
