@@ -9,7 +9,7 @@ use smoltcp::{
 
 /// Wrapper for use as a `smoltcp` interface for sending and receiving raw network frames.
 pub struct Phy<'a, SPI, NCS, INT, RESET> {
-    phy: Enc28j60<SPI, NCS, INT, RESET>,
+    pub phy: Enc28j60<SPI, NCS, INT, RESET>,
     rx_buf: &'a mut [u8],
     tx_buf: &'a mut [u8],
 }

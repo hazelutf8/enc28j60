@@ -16,6 +16,8 @@
 
 extern crate panic_semihosting;
 
+use cortex_m_semihosting::{hprint, hprintln};
+
 use core::fmt::Write;
 use cortex_m_rt::entry;
 use enc28j60::{smoltcp_phy::Phy, Enc28j60};
@@ -36,6 +38,7 @@ const SRC_MAC: [u8; 6] = [0x20, 0x18, 0x03, 0x01, 0x00, 0x00];
 
 #[entry]
 fn main() -> ! {
+    hprintln!("Startup\n");
     let mut cp = cortex_m::Peripherals::take().unwrap();
     let dp = device::Peripherals::take().unwrap();
 
@@ -62,7 +65,7 @@ fn main() -> ! {
             dp.USART1,
             (tx, rx),
             &mut afio.mapr,
-            115_200_u32.bps(),
+            9600_u32.bps(),
             clocks,
             &mut rcc.apb2,
         );
@@ -97,7 +100,7 @@ fn main() -> ! {
         let _ = reset.set_high();
         let mut delay = Delay::new(cp.SYST, clocks);
 
-        Enc28j60::new(
+        let mut phy = Enc28j60::new(
             spi,
             ncs,
             enc28j60::Unconnected,
@@ -107,7 +110,16 @@ fn main() -> ! {
             SRC_MAC,
         )
         .ok()
-        .unwrap()
+        .unwrap();
+
+        // Just in case clear any Rx pending packets
+        for check in phy.next_packet() {
+            if let Some(packet) = check {
+                let a = packet.ignore(); // Ignore success or failure during drain.
+                hprintln!("init {:?}", a);
+            }
+        }
+        phy
     };
     writeln!(serial, "enc26j60 initialized").unwrap();
 
@@ -143,6 +155,7 @@ fn main() -> ! {
     let server_handle = sockets.add(server_socket);
     writeln!(serial, "sockets initialized").unwrap();
 
+    hprint!("Execution Loop\n");
     let mut count: u64 = 0;
     loop {
         match iface.poll(&mut sockets, Instant::from_millis(0)) {
@@ -151,6 +164,7 @@ fn main() -> ! {
                     let mut socket = sockets.get::<TcpSocket>(server_handle);
                     if !socket.is_open() {
                         socket.listen(80).unwrap();
+                        hprintln!("sl");
                     }
 
                     if socket.can_send() {
@@ -176,12 +190,23 @@ fn main() -> ! {
 
                         writeln!(serial, "tcp:80 close").unwrap();
                         socket.close();
+                        hprintln!("sc");
                     }
                 }
             }
             Err(e) => {
-                writeln!(serial, "Error: {:?}", e).unwrap();
+                hprintln!("Error: {:?}", e);
             }
+            //_ => {
+            //    // Flush the phy buffer
+            //    let phy = &mut iface.device_mut().phy;
+            //    for check in phy.next_packet() {
+            //        if let Some(packet) = check {
+            //            let b = packet.ignore(); // Ignore success or failure during Rx drain.
+            //            hprintln!("drain {:?}", b);
+            //        }
+            //    }
+            //}
         }
     }
 }
